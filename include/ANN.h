@@ -24,7 +24,8 @@ struct node
 class Ann
 {
 public:
-    explicit Ann(int nNIL, int nNOL, int nNHL);
+    Ann(int nNIL, int nNOL, int nNHL);
+    Ann(const Ann & C);
     ~Ann();
     int numNodesInputLayer;
     int numNodesOutputLayer;

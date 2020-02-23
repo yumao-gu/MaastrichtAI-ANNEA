@@ -17,7 +17,7 @@
 #include <boost/geometry/geometries/point_xy.hpp>
 
 #define PI 3.1415926
-#define ROBOT_RADIOS 10
+#define ROBOT_RADIOS 25
 
 using namespace std;
 using namespace Eigen;
@@ -30,7 +30,7 @@ typedef bg::model::segment<DPoint> DSegment;
 class Sensor
 {
 public:
-    explicit Sensor(double angle,Vector2d init_pose);
+    Sensor(double angle,Vector2d init_pose);
 
 public:
     double angle = 0.0;
@@ -50,17 +50,20 @@ public:
     double direction = 0.0;                 //angle to x-axis
     vector<Sensor> sensors;
     vector<double> sensors_data;
+    int collision_times = 0;
 
 private:
-    double v_bound = 3.0;                   //max speed bound
-    double speed_step = 0.1;               //Speed increase step
-    double l = 8;                         //the distance of the two wheels
-    double delta_t = 1;                   //time interval
+    double v_bound = 30.0;                   //max speed bound
+    double speed_step = 10.0;               //Speed increase step
+    double l = 40;                         //the distance of the two wheels
+    double delta_t = 0.3;                   //time interval
     Vector2d ICC;                           //Instantaneou Center of Curvature
     double R = 0.0;                         //from ICC to center
     double omega = 0.0;                     //angle speed
 
 public:
+    Robot(Vector2d cp,double ang);
+
     //Receive keyboard information to control robot speed
     void SpeedControl(char order);
 
