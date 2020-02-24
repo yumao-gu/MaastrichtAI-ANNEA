@@ -67,6 +67,9 @@ void Robot::SpeedControl(char order)
 //robot movement update
 void Robot::Move(vector<DSegment> virtual_wall_set)
 {
+    this->path.push_back(this->center_pose);
+//    cout << "BEFORE :\tl_speed : " <<  this->l_speed << "\tr_speed : " <<  this->r_speed
+//         << "\tdirection : " <<  this->direction << "\n" << this->center_pose << endl;
     if(this->l_speed == 0 && this->r_speed == 0)
     {
         return;
@@ -161,6 +164,8 @@ void Robot::Move(vector<DSegment> virtual_wall_set)
     {
         this->direction += 2*PI;
     }
+//    cout << "AFTER :\tl_speed : " <<  this->l_speed << "\tr_speed : " <<  this->r_speed
+//         << "\tdirection : " <<  this->direction << "\n" << this->center_pose << endl;
 }
 
 //calculate the sensors data
@@ -170,7 +175,7 @@ void Robot::GetAllData(vector<DSegment> wall_set)
     {
         this->sensors.push_back(Sensor(this->direction + i * PI / 6,this->center_pose));
     }
-    cout<<"the sensors' data : ";
+    //cout<<"the sensors' data : ";
     for(int i = 0; i < 12; i++)
     {
         double min_sensor_data = 200.0;
@@ -183,9 +188,9 @@ void Robot::GetAllData(vector<DSegment> wall_set)
         min_sensor_data = 10 - 8 * (1 - exp(-min_sensor_data / 200.0));
 
         this->sensors_data.push_back(min_sensor_data);
-        cout << "\t" << min_sensor_data;
+        //cout << "\t" << min_sensor_data;
     }
-    cout<<endl;
+    //cout<<endl;
 }
 
 //clear all data

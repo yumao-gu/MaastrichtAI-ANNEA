@@ -28,21 +28,22 @@ class EA
 public:
     vector<ANNRobot> robot_group;
     vector<double> fitness_group;
+    int generation = 100;
 private:
     int population = 100;
-    int generation = 1000;
-    int max_envolution_steps = 500;
+    int max_envolution_steps = 2000;
     int nth_max_selection_rank = 4;
 
 public:
     void EAInitialization();
     void Selection();
     void FitnessAll();
-    void Reproduction();
     void Crossover();
+    void PopulationUpdate();
     void Mutation();
     void Envolution();
     void ClearGeneration();
+    void GetBestFitness();
 };
 
 

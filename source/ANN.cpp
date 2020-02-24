@@ -9,7 +9,7 @@
 //random distribution
 static default_random_engine eann((unsigned)time(0));
 static normal_distribution<double> n_normal(0,1);
-static uniform_real_distribution<double> n_uniform(-1,1);
+static uniform_real_distribution<double> n_uniform(-10,10);
 
 Ann::Ann(int nNIL, int nNOL,int nNHL):numNodesInputLayer(nNIL), numNodesOutputLayer(nNOL),numNodesHiddenLayer(nNHL)
 {

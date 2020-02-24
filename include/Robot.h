@@ -46,17 +46,18 @@ class Robot
 {
 public:
     Vector2d center_pose = {0,0};
+    vector<Vector2d> path;
     double l_speed = 0.0,r_speed = 0.0;
     double direction = 0.0;                 //angle to x-axis
     vector<Sensor> sensors;
     vector<double> sensors_data;
     int collision_times = 0;
+    double delta_t = 0.3;                   //time interval
+    double v_bound = 40.0;                   //max speed bound
 
 private:
-    double v_bound = 30.0;                   //max speed bound
     double speed_step = 10.0;               //Speed increase step
     double l = 40;                         //the distance of the two wheels
-    double delta_t = 0.3;                   //time interval
     Vector2d ICC;                           //Instantaneou Center of Curvature
     double R = 0.0;                         //from ICC to center
     double omega = 0.0;                     //angle speed
@@ -80,13 +81,13 @@ private:
     //R calculate
     void RCalculate()
     {
-        this->R = 0.5 * (l_speed + r_speed) / (r_speed - l_speed);
+        this->R = 0.5 * this->l * (this->l_speed + this->r_speed) / (this->r_speed - this->l_speed);
     }
 
     //omega calculate
     void OmegaCalculate()
     {
-        this->omega = (r_speed - l_speed) / l;
+        this->omega = (this->r_speed - this->l_speed) / this->l;
     }
 };
 

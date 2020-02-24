@@ -1,21 +1,26 @@
 #include <iostream>
 #include "./include/ANN.h"
 #include "./include/Robot.h"
+#include "./include/EA.h"
 
 int main()
 {
-    Ann ann(8,2,4);
-    vector<double> sensors_data = {1.,2.,3.,4.,5.,6.,7.,8.};
-    for(int i = 0;i < 2; i++)
+    EA experiment;
+    experiment.EAInitialization();
+    cout<<"robot group size : "<<experiment.robot_group.size()<<endl;
+    experiment.Envolution();
+    experiment.FitnessAll();
+
+    for(int i = 0; i < experiment.generation; i++)
     {
-        ann.EvolveOneStep(sensors_data);
+        cout<<"generation : " << i << "\t";
+        experiment.Selection();
+        experiment.Crossover();
+        experiment.Mutation();
+        experiment.Envolution();
+        experiment.FitnessAll();
+        experiment.GetBestFitness();
     }
-    cout<<"HiddenLayer\n";
-    for(int i = 0; i < ann.HiddenLayer.size(); i++)
-    {
-        cout<< "\t" << ann.HiddenLayer[i].value <<endl;
-    }
-    cout<<endl;
 
     std::cout << "END!" << std::endl;
     return 0;
