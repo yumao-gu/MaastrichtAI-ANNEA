@@ -9,7 +9,8 @@
 //random distribution
 static default_random_engine eann((unsigned)time(0));
 static normal_distribution<double> n_normal(0,1);
-static uniform_real_distribution<double> n_uniform(-10,10);
+static uniform_real_distribution<double> n_uniform(-1,1);
+static uniform_real_distribution<double> n_uniform2(-40,40);
 
 Ann::Ann(int nNIL, int nNOL,int nNHL):numNodesInputLayer(nNIL), numNodesOutputLayer(nNOL),numNodesHiddenLayer(nNHL)
 {
@@ -25,7 +26,7 @@ Ann::Ann(int nNIL, int nNOL,int nNHL):numNodesInputLayer(nNIL), numNodesOutputLa
 
     //matrix initialization
     this->FirstWeightMatrix = MatrixXd::Zero(this->InputLayer.size(),this->HiddenLayer.size()- 1).unaryExpr([](double dummy){return n_uniform(eann);});
-    this->SecondWeightMatrix = MatrixXd::Zero(this->HiddenLayer.size(),this->OutputLayer.size()).unaryExpr([](double dummy){return n_uniform(eann);});
+    this->SecondWeightMatrix = MatrixXd::Zero(this->HiddenLayer.size(),this->OutputLayer.size()).unaryExpr([](double dummy){return n_uniform2(eann);});
 }
 
 Ann::Ann(const Ann & C)

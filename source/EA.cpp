@@ -31,13 +31,15 @@ void weight_swap(double* a1, double* a2,int length ,int pos)
 ANNRobot::ANNRobot()
 {
     //random distribution
-    this->robot = Robot({n_uniform_x(e),n_uniform_y(e)},n_uniform_ang(e));
+    //this->robot = Robot({n_uniform_x(e),n_uniform_y(e)},n_uniform_ang(e));
+    this->robot = Robot({200,100},0.0);
 }
 
 ANNRobot::ANNRobot(const ANNRobot & C)
 {
     //random distribution
-    this->robot = Robot({n_uniform_x(e),n_uniform_y(e)},n_uniform_ang(e));
+//    this->robot = Robot({n_uniform_x(e),n_uniform_y(e)},n_uniform_ang(e));
+    this->robot = Robot({200,100},0.0);
     this->controller = Ann(C.controller);
 }
 
@@ -45,12 +47,49 @@ void ANNRobot::RunOneStep()
 {
     this->robot.ClearData();
     this->robot.GetAllData(this->map.wall_set);
+
+//    cout<<"sensors_data\t";
+//    for(int i = 0; i < this->robot.sensors_data.size(); i++)
+//    {
+//        cout<<this->robot.sensors_data[i]<<"\t";
+//    }
+//    cout<<endl;
+
     this->controller.EvolveOneStep(this->robot.sensors_data);
+
+//    cout<<"hidden\t";
+//    for(int i = 0; i < this->controller.HiddenLayer.size(); i++)
+//    {
+//        cout<<this->controller.HiddenLayer[i].value<<"\t";
+//    }
+//    cout<<endl;
+
+//    cout<<"output\t";
+//    for(int i = 0; i < this->controller.OutputLayer.size(); i++)
+//    {
+//        cout<<this->controller.OutputLayer[i].value<<"\t";
+//    }
+//    cout<<endl;
+
     this->robot.l_speed = this->controller.OutputLayer[0].value;
     this->robot.l_speed = max(-this->robot.v_bound,min(this->robot.v_bound,this->robot.l_speed));
     this->robot.r_speed = this->controller.OutputLayer[1].value;
     this->robot.r_speed = max(-this->robot.v_bound,min(this->robot.v_bound,this->robot.r_speed));
+
+//    this->robot.l_speed = this->robot.v_bound;
+//    this->robot.r_speed = this->robot.v_bound;
+
+//    cout<<"before move\t";
+//    cout <<"\tpos:\t"<< this->robot.center_pose.x()
+//         <<'\t'<<this->robot.center_pose.y()
+//         <<"\tspeed:\t"<<this->robot.l_speed
+//         <<'\t'<<this->robot.r_speed<<endl;
     this->robot.Move(this->map.virtual_wall_set);
+//    cout<<"after move\t";
+//    cout <<"\tpos:\t"<< this->robot.center_pose.x()
+//         <<'\t'<<this->robot.center_pose.y()
+//         <<"\tspeed:\t"<<this->robot.l_speed
+//         <<'\t'<<this->robot.r_speed<<endl;
     this->map.grid_map.block(min(159,max(0,(int)this->robot.center_pose.y() - 20)),
                              min(159,max(0,(int)this->robot.center_pose.x() - 20)),40,40).setOnes();
 }
@@ -73,7 +112,7 @@ void EA::EAInitialization()
 void EA::FitnessAll()
 {
     this->fitness_group.resize(this->robot_group.size());
-# pragma omp parallel for
+//# pragma omp parallel for
     for(int i = 0; i < this->robot_group.size(); i++)
     {
         this->robot_group[i].Fitness();
@@ -86,7 +125,7 @@ void EA::FitnessAll()
 
 void EA::Envolution()
 {
-# pragma omp parallel for
+//# pragma omp parallel for
     for(int i = 0; i < this->robot_group.size(); i++)
     {
         for(int j = 0; j < this->max_envolution_steps;j++)
@@ -95,6 +134,11 @@ void EA::Envolution()
 //            cout << "robot : " << i << "\tsteps : " << j
 //                 << "\tl_speed : " <<  this->robot_group[i].robot.l_speed << "\tr_speed : " <<  this->robot_group[i].robot.r_speed
 //                 << "\tdirection : " <<  this->robot_group[i].robot.direction << "\n" << this->robot_group[i].robot.center_pose << endl;
+
+//            cout << "robot id:\t"<<i<<"\tsteps:\t"<<j<<"\tpos:\t"<< this->robot_group[i].robot.center_pose.x()
+//                 <<'\t'<<this->robot_group[i].robot.center_pose.y()
+//                 <<"\tspeed:\t"<<this->robot_group[i].robot.l_speed
+//                 <<'\t'<<this->robot_group[i].robot.r_speed<<endl;
         }
         //cout << "robot : " << i << "\tgrid map" << this->robot_group[i].map.grid_map.sum() << endl;
     }
@@ -102,19 +146,47 @@ void EA::Envolution()
 
 void EA::Selection()
 {
-    nth_element(this->fitness_group.begin(), this->fitness_group.begin() + this->nth_max_selection_rank,
-     this->fitness_group.end(), std::greater<double>());
+//    cout<<"\nbefore this->fitness_group:\t";
+//    for(int i = 0; i < this->fitness_group.size();i++)
+//    {
+//        cout<<this->fitness_group[i]<<'\t';
+//    }
+//    cout<<endl;
+
+//    nth_element(this->fitness_group.begin(), this->fitness_group.begin() + this->nth_max_selection_rank,
+//                this->fitness_group.end(), std::greater<double>());
+    sort(this->fitness_group.rbegin(),this->fitness_group.rend());
+    this->fitness_group.erase(unique(this->fitness_group.begin(), this->fitness_group.end()), this->fitness_group.end());
+
+//    cout<<"after this->fitness_group:\t";
+//    for(int i = 0; i < this->fitness_group.size();i++)
+//    {
+//        cout<<this->fitness_group[i]<<'\t';
+//    }
+//    cout<<endl;
+
     double nth_max_selection_rank_fitness = this->fitness_group[this->nth_max_selection_rank];
+//    cout<<"nth_max_selection_rank_fitness\t"<<nth_max_selection_rank_fitness<<endl;
     vector<ANNRobot> robot_group_tmp;
 
-    for(int i = 0; i < this->robot_group.size(); i++)
+    for(int j = 0; j < nth_max_selection_rank;j++)
     {
-        if(this->robot_group[i].fitness > nth_max_selection_rank_fitness)
+        for(int i = 0; i < this->robot_group.size(); i++)
         {
-            robot_group_tmp.push_back(ANNRobot(this->robot_group[i]));
+            if(this->robot_group[i].fitness == this->fitness_group[j])
+            {
+                robot_group_tmp.push_back(ANNRobot(this->robot_group[i]));
+//                cout<<"select robot : " << i<<"\tselect fitness:"<<this->robot_group[i].fitness<<endl;
+                break;
+
+
+//            cout << "select robot : " << i << "\tSecondWeightMatrix : \n" << this->robot_group[i].controller.SecondWeightMatrix <<endl;
+
+            }
         }
     }
 
+//    cout<<"robot_group_tmp.size():\t"<<robot_group_tmp.size()<<endl;
     this->ClearGeneration();
     this->robot_group = robot_group_tmp;
     robot_group_tmp.clear();
@@ -122,6 +194,10 @@ void EA::Selection()
 //    for(int i = 0; i < this->robot_group.size(); i++)
 //    {
 //        cout << "robot : " << i << "\tSecondWeightMatrix : \n" << this->robot_group[i].controller.SecondWeightMatrix <<endl;
+//    }
+//    for(int i = 0; i < this->robot_group.size(); i++)
+//    {
+//        cout << "robot : " << i << "\tFirstWeightMatrix : \n" << this->robot_group[i].controller.FirstWeightMatrix <<endl;
 //    }
 }
 
@@ -137,8 +213,13 @@ void EA::Crossover()
     for(int i = 0; i < (this->population - this->nth_max_selection_rank) / 2; i++)
     {
         uniform_int_distribution<int> n_uniform_int(0,this->nth_max_selection_rank - 1);
-        int parent1 = n_uniform_int(e);
-        int parent2 = n_uniform_int(e);
+        int parent1,parent2;
+
+        do{
+            parent1 = n_uniform_int(e);
+            parent2 = n_uniform_int(e);
+        }while(parent1 == parent2);
+
         int first_weight_size = this->robot_group[parent1].controller.FirstWeightMatrix.size();
         int second_weight_size = this->robot_group[parent1].controller.SecondWeightMatrix.size();
         int weight_size = this->robot_group[parent2].controller.FirstWeightMatrix.size() + this->robot_group[parent2].controller.SecondWeightMatrix.size();
@@ -168,7 +249,7 @@ void EA::Crossover()
 
         uniform_real_distribution<double> n_uniform_method(0,1);
         double method = n_uniform_method(e);
-        if(method < 0.1)
+        if(method < 0.05)
         {
             //cout<<"method1"<<endl;
             uniform_int_distribution<int> n_uniform_int(0,weight_size);
@@ -178,7 +259,7 @@ void EA::Crossover()
         else if(method < 0.55)
         {
             //cout<<"method2"<<endl;
-            uniform_int_distribution<int> n_uniform_int2(0,10);
+            uniform_int_distribution<int> n_uniform_int2(0,20);
             int j_size = n_uniform_int(e);
             for(int j = 0; j < j_size; j++)
             {
@@ -237,9 +318,9 @@ void EA::PopulationUpdate()
 void EA::Mutation()
 {
     this->PopulationUpdate();
-    cout<<"population : "<<population<< "\t size : "<< this->robot_group.size()<<endl;
-# pragma omp parallel for
-    for(int i = this->nth_max_selection_rank; i < population; i++)
+    //cout<<"population : "<<population<< "\t size : "<< this->robot_group.size()<<endl;
+//# pragma omp parallel for
+    for(int i = 0; i < population; i++)
     {
         uniform_real_distribution<double> n_uniform_prob(0,1);
         double mutaion_prob = n_uniform_prob(e);
@@ -256,11 +337,11 @@ void EA::Mutation()
 //                    }
                     if(unit_mutation_prob > 0.975)
                     {
-                        this->robot_group[i].controller.FirstWeightMatrix(j,k) *= 1.1;
+                        this->robot_group[i].controller.FirstWeightMatrix(j,k) += 0.05;
                     }
                     else if(unit_mutation_prob > 0.95)
                     {
-                        this->robot_group[i].controller.FirstWeightMatrix(j,k) *= 0.9;
+                        this->robot_group[i].controller.FirstWeightMatrix(j,k) -= 0.05;
                     }
 //                    if(unit_mutation_prob > 0.95)
 //                    {
@@ -274,13 +355,13 @@ void EA::Mutation()
                 for(int k = 0; k < this->robot_group[i].controller.OutputLayer.size() ;k++)
                 {
                     double unit_mutation_prob = n_uniform_prob(e);
-                    if(unit_mutation_prob > 0.975)
+                    if(unit_mutation_prob > 0.95)
                     {
-                        this->robot_group[i].controller.SecondWeightMatrix(j,k) *= 1.1;
+                        this->robot_group[i].controller.SecondWeightMatrix(j,k) += 0.2;
                     }
-                    else if(unit_mutation_prob > 0.95)
+                    else if(unit_mutation_prob > 0.90)
                     {
-                        this->robot_group[i].controller.SecondWeightMatrix(j,k) *= 0.9;
+                        this->robot_group[i].controller.SecondWeightMatrix(j,k) -= 0.2;
                     }
                 }
             }
@@ -288,7 +369,7 @@ void EA::Mutation()
     }
 }
 
-void EA::GetBestFitness()
+ANNRobot EA::GetBestFitness()
 {
     int best_id = 0;
     double best_fitness = 0.0;
@@ -301,10 +382,11 @@ void EA::GetBestFitness()
         }
     }
     cout<<"best id : " << best_id << "\tfitness : " << best_fitness <<"\tcollision times : "<<this->robot_group[best_id].robot.collision_times<<endl;
-//    for(auto pos : this->robot_group[best_id].robot.path)
-//    {
-//        cout<<pos.x()<<"\t"<<pos.y()<<endl;
-//    }
+    for(auto pos : this->robot_group[best_id].robot.path)
+    {
+        cout<<pos.x()<<"\t"<<pos.y()<<endl;
+    }
+    return this->robot_group[best_id];
 }
 
 

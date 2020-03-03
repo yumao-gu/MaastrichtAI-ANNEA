@@ -30,8 +30,8 @@ public:
     vector<double> fitness_group;
     int generation = 100;
 private:
-    int population = 100;
-    int max_envolution_steps = 2000;
+    int population = 20;
+    int max_envolution_steps = 100;
     int nth_max_selection_rank = 4;
 
 public:
@@ -43,7 +43,7 @@ public:
     void Mutation();
     void Envolution();
     void ClearGeneration();
-    void GetBestFitness();
+    ANNRobot GetBestFitness();
 };
 
 
