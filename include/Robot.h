@@ -47,6 +47,7 @@ class Robot
 public:
     Vector2d center_pose = {0,0};
     vector<Vector2d> path;
+    double diff_l_r = 0.0;
     double l_speed = 0.0,r_speed = 0.0;
     double direction = 0.0;                 //angle to x-axis
     vector<Sensor> sensors;

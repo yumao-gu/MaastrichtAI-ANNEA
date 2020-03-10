@@ -67,6 +67,7 @@ void Robot::SpeedControl(char order)
 //robot movement update
 void Robot::Move(vector<DSegment> virtual_wall_set)
 {
+    this->diff_l_r += abs(this->l_speed - this->r_speed);
     this->path.push_back(this->center_pose);
 //    cout << "BEFORE :\tl_speed : " <<  this->l_speed << "\tr_speed : " <<  this->r_speed
 //         << "\tdirection : " <<  this->direction << "\n" << this->center_pose << endl;
@@ -83,16 +84,26 @@ void Robot::Move(vector<DSegment> virtual_wall_set)
     // to use center pose
     double forward_distance = (this->l_speed + this->r_speed) / 2 * this->delta_t;
     DPoint forward_point(this->center_pose.x() + forward_distance * cos(this->direction),this->center_pose.y() + forward_distance * sin(this->direction));
+
     DSegment forward_seg(DPoint(this->center_pose.x(),this->center_pose.y()),forward_point);
+//    DSegment forward_seg(backward_point,forward_point);
     double forward_angle = atan2((forward_seg.second.y() - forward_seg.first.y()),(forward_seg.second.x() - forward_seg.first.x()));
     int forward_sensor_id =abs((int)((forward_angle - this->direction)/PI*6)%12);
     std::list<DPoint> intersction_Points;
     double virtual_wall_angle;
+    DSegment virtual_wall;
     for(vector<DSegment>::iterator it = virtual_wall_set.begin(); it != virtual_wall_set.end();it++)
     {
-        DSegment virtual_wall = *it;
+        virtual_wall = *it;
         virtual_wall_angle = atan((virtual_wall.second.y() - virtual_wall.first.y())/(virtual_wall.second.x() - virtual_wall.first.x()));
         bg::intersection(virtual_wall, forward_seg, intersction_Points);
+        double ddistance = 100.0;
+        ddistance = bg::distance(DPoint(center_pose.x(), center_pose.y()), virtual_wall);
+        if(intersction_Points.empty() && ddistance < 0.01)
+        {
+            intersction_Points.push_back(DPoint(center_pose.x(), center_pose.y()));
+        }
+
         if(!intersction_Points.empty())
         {
             virtual_wall_set.erase(it);
@@ -102,6 +113,9 @@ void Robot::Move(vector<DSegment> virtual_wall_set)
 
     if(!intersction_Points.empty() && this->sensors_data[forward_sensor_id] < 5 * ROBOT_RADIOS)
     {
+//        cout<<"collision!!!!!!!!!!!!"<<endl;
+//        cout << "BEFORE :\tl_speed : " <<  this->l_speed << "\tr_speed : " <<  this->r_speed
+//             << "\tdirection : " <<  this->direction << "\n" << this->center_pose << endl;
         this->collision_times++;
         double collision_distance = bg::distance(intersction_Points.back(), DPoint(this->center_pose.x(), this->center_pose.y()));
         double collision_time = collision_distance / this->l_speed;
@@ -114,25 +128,22 @@ void Robot::Move(vector<DSegment> virtual_wall_set)
         {
             this->direction += this->omega * collision_time;
         }
-        for(DSegment virtual_wall : virtual_wall_set)
+        for(DSegment virtual_wall_2 : virtual_wall_set)
         {
-            double virtual_wall_angle_2nd = atan((virtual_wall.second.y() - virtual_wall.first.y())/(virtual_wall.second.x() - virtual_wall.first.x()));
             std::list<DPoint> intersction_Points_2nd;
-            DSegment forward_seg_2nd(DPoint(this->center_pose.x(),this->center_pose.y()),DPoint(center_pose_2nd.x(),center_pose_2nd.y()));
-            bg::intersection(virtual_wall, forward_seg_2nd, intersction_Points_2nd);
+            DSegment forward_seg_2nd(DPoint(center_pose.x(),center_pose.y()),DPoint(center_pose_2nd.x(),center_pose_2nd.y()));
+            bg::intersection(virtual_wall_2, forward_seg_2nd, intersction_Points_2nd);
+            if(bg::distance(forward_seg_2nd, virtual_wall_2) < 0.01)
+            {
+                bg::intersection(virtual_wall_2, virtual_wall, intersction_Points_2nd);
+            }
             if(intersction_Points_2nd.empty())
             {
                 continue;
             }
             else
             {
-                double collision_distance_2nd = bg::distance(intersction_Points_2nd.back(), DPoint(this->center_pose.x(), this->center_pose.y()));
-                double collision_time_2nd = collision_distance_2nd / collision_speed;
-                double rest_time_2nd = rest_time - collision_time_2nd;
-                double collision_speed_2nd = collision_speed * cos(virtual_wall_angle_2nd - virtual_wall_angle);
                 center_pose_2nd = {intersction_Points_2nd.back().x(),intersction_Points_2nd.back().y()};
-                Translation2d current_translation_2nd(collision_speed_2nd * rest_time_2nd * cos(virtual_wall_angle_2nd),collision_speed_2nd * rest_time_2nd * sin(virtual_wall_angle_2nd));
-                center_pose_2nd = current_translation_2nd * center_pose_2nd;
                 break;
             }
         }
@@ -164,8 +175,6 @@ void Robot::Move(vector<DSegment> virtual_wall_set)
     {
         this->direction += 2*PI;
     }
-//    cout << "AFTER :\tl_speed : " <<  this->l_speed << "\tr_speed : " <<  this->r_speed
-//         << "\tdirection : " <<  this->direction << "\n" << this->center_pose << endl;
 }
 
 //calculate the sensors data
@@ -175,7 +184,7 @@ void Robot::GetAllData(vector<DSegment> wall_set)
     {
         this->sensors.push_back(Sensor(this->direction + i * PI / 6,this->center_pose));
     }
-    //cout<<"the sensors' data : ";
+//    cout<<"the sensors' data : ";
     for(int i = 0; i < 12; i++)
     {
         double min_sensor_data = 200.0;
@@ -185,12 +194,12 @@ void Robot::GetAllData(vector<DSegment> wall_set)
         }
 
         //sensor output transform actual distance
-        min_sensor_data = 10 - 8 * (1 - exp(-min_sensor_data / 200.0));
+//        min_sensor_data = 10 - 8 * (1 - exp(-min_sensor_data / 200.0));
 
         this->sensors_data.push_back(min_sensor_data);
-        //cout << "\t" << min_sensor_data;
+//        cout << "\t" << min_sensor_data;
     }
-    //cout<<endl;
+//    cout<<endl;
 }
 
 //clear all data
